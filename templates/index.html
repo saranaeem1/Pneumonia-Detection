@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pneumonia Detection</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        input[type="file"] { margin: 20px 0; }
+        .result { font-size: 1.5em; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Pneumonia Detection from Chest X-Ray</h1>
+    <p>Upload a chest X-ray image to detect pneumonia.</p>
+
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" name="file" id="file" accept="image/*" required>
+        <button type="submit">Upload Image</button>
+    </form>
+
+    <div class="result" id="result"></div>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const resultDiv = document.getElementById('result');
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(form);
+            const fileInput = document.getElementById('file');
+            
+            if (!fileInput.files.length) {
+                resultDiv.textContent = 'Please select a file.';
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onloadend = function() {
+                const formData = new FormData();
+                formData.append("file", file);
+
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.result) {
+                        resultDiv.textContent = `Prediction: ${data.result} (Confidence: ${data.confidence.toFixed(2)})`;
+                    } else {
+                        resultDiv.textContent = 'Error: ' + data.message;
+                    }
+                })
+                .catch(error => {
+                    resultDiv.textContent = 'Error: Unable to process the image.';
+                });
+            };
+
+            reader.readAsDataURL(file);
+        });
+    </script>
+</body>
+</html>
